@@ -16,7 +16,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center">
               <Bone className="w-4 h-4 text-stone-50" />
             </div>
-            <span className="text-stone-300 font-semibold">PaleoPedia</span>
+            <span className="text-stone-300 font-semibold">FossilForge</span>
           </button>
           <p className="text-stone-500 text-sm text-center sm:text-right">
             A community-driven encyclopedia of prehistoric life.

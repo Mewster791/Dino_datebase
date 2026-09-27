@@ -20,7 +20,7 @@ export function Header({ view, pendingCount, onNavigate }: HeaderProps) {
             </div>
             <div className="text-left">
               <span className="block text-stone-50 font-bold text-lg leading-none tracking-tight">
-                PaleoPedia
+                FossilForge
               </span>
               <span className="block text-stone-400 text-xs leading-none mt-0.5">
                 Community Prehistoric Encyclopedia

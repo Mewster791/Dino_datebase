@@ -89,7 +89,7 @@ export function HomePage({ animals, loading, onNavigate }: HomePageProps) {
       {/* How it works */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-stone-900">How PaleoPedia Works</h2>
+          <h2 className="text-3xl font-bold text-stone-900">How FossilForge Works</h2>
           <p className="mt-3 text-stone-600 max-w-xl mx-auto">
             A three-step process keeps our encyclopedia growing, accurate, and community-driven.
           </p>
