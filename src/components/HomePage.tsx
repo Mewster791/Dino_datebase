@@ -1,4 +1,4 @@
-import { Compass, ArrowRight, Sparkles, Users, ShieldCheck, Search } from 'lucide-react';
+import { Compass, ArrowRight, Sparkles, Users, ShieldCheck, Search, Plus } from 'lucide-react';
 import type { Animal } from '@/types/database';
 import { AnimalCard } from '@/components/AnimalCard';
 
@@ -6,9 +6,10 @@ interface HomePageProps {
   animals: Animal[];
   loading: boolean;
   onNavigate: (view: { name: 'home' } | { name: 'browse' } | { name: 'detail'; animalId: string }) => void;
+  onSuggestNew: () => void;
 }
 
-export function HomePage({ animals, loading, onNavigate }: HomePageProps) {
+export function HomePage({ animals, loading, onNavigate, onSuggestNew }: HomePageProps) {
   const featured = animals.slice(0, 6);
   const categories = [...new Set(animals.map((a) => a.category))];
 
@@ -49,11 +50,11 @@ export function HomePage({ animals, loading, onNavigate }: HomePageProps) {
                 Explore the Collection
               </button>
               <button
-                onClick={() => onNavigate({ name: 'browse' })}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-stone-800 text-stone-200 font-semibold hover:bg-stone-700 transition-colors border border-stone-700"
+                onClick={onSuggestNew}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-900/30"
               >
-                <Compass className="w-5 h-5" />
-                How It Works
+                <Plus className="w-5 h-5" />
+                Suggest a New Animal
               </button>
             </div>
           </div>
@@ -105,7 +106,7 @@ export function HomePage({ animals, loading, onNavigate }: HomePageProps) {
             number="02"
             icon={<Users className="w-6 h-6" />}
             title="Suggest"
-            description="Found something missing or incorrect? Anyone can submit a suggestion for updates, expansions, or corrections."
+            description="Found something missing or incorrect? Anyone can suggest new animals, updates, expansions, or corrections to the encyclopedia."
           />
           <StepCard
             number="03"

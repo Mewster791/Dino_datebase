@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Plus } from 'lucide-react';
 import type { Animal } from '@/types/database';
 import { CATEGORIES } from '@/types/database';
 import { AnimalCard } from '@/components/AnimalCard';
@@ -9,9 +9,10 @@ interface BrowsePageProps {
   loading: boolean;
   onNavigate: (view: { name: 'detail'; animalId: string }) => void;
   onSuggest: (animal: Animal) => void;
+  onSuggestNew: () => void;
 }
 
-export function BrowsePage({ animals, loading, onNavigate }: BrowsePageProps) {
+export function BrowsePage({ animals, loading, onNavigate, onSuggestNew }: BrowsePageProps) {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string>('all');
   const [diet, setDiet] = useState<string>('all');
@@ -64,11 +65,20 @@ export function BrowsePage({ animals, loading, onNavigate }: BrowsePageProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-stone-900">Explore Prehistoric Animals</h1>
-        <p className="mt-2 text-stone-600">
-          Browse our full collection of prehistoric creatures. Click any card to see its full page.
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-stone-900">Explore Prehistoric Animals</h1>
+          <p className="mt-2 text-stone-600">
+            Browse our full collection of prehistoric creatures. Click any card to see its full page.
+          </p>
+        </div>
+        <button
+          onClick={onSuggestNew}
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-colors shadow-sm whitespace-nowrap"
+        >
+          <Plus className="w-5 h-5" />
+          Suggest New Animal
+        </button>
       </div>
 
       {/* Search + filter toggle */}

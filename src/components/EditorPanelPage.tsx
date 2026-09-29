@@ -52,6 +52,11 @@ export function EditorPanelPage({ animals, onNavigate, onAnimalsChanged }: Edito
   }, [fetchSuggestions]);
 
   const handleApprove = async (suggestion: Suggestion) => {
+    if (suggestion.suggestion_type === 'new_animal') {
+      await handleApproveNewAnimal(suggestion);
+      return;
+    }
+
     if (!suggestion.animal_id || !suggestion.field) return;
     const animal = animals.find((a) => a.id === suggestion.animal_id);
     if (!animal) return;
@@ -87,6 +92,56 @@ export function EditorPanelPage({ animals, onNavigate, onAnimalsChanged }: Edito
     }
 
     showToast(`Approved: ${suggestion.field.replace(/_/g, ' ')} updated for ${animal.name}`);
+    fetchSuggestions();
+    onAnimalsChanged();
+  };
+
+  const handleApproveNewAnimal = async (suggestion: Suggestion) => {
+    if (!suggestion.proposed_value) {
+      showToast('No animal data found in this suggestion.');
+      return;
+    }
+
+    let animalData: Record<string, unknown>;
+    try {
+      animalData = JSON.parse(suggestion.proposed_value);
+    } catch {
+      showToast('Invalid animal data in suggestion.');
+      return;
+    }
+
+    if (!animalData.name) {
+      showToast('Suggestion is missing a name — cannot create animal.');
+      return;
+    }
+
+    if (animalData.discovery_year) {
+      animalData.discovery_year = parseInt(String(animalData.discovery_year), 10) || null;
+    }
+    if (animalData.fun_facts) {
+      animalData.fun_facts = String(animalData.fun_facts).split('\n').map((f: string) => f.trim()).filter(Boolean);
+    } else {
+      animalData.fun_facts = [];
+    }
+
+    const { error: insertError } = await supabase.from('animals').insert(animalData);
+
+    if (insertError) {
+      showToast('Failed to create the new animal.');
+      return;
+    }
+
+    const { error: statusError } = await supabase
+      .from('suggestions')
+      .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+      .eq('id', suggestion.id);
+
+    if (statusError) {
+      showToast('Animal created, but suggestion status failed to update.');
+      return;
+    }
+
+    showToast(`New animal created: ${animalData.name}`);
     fetchSuggestions();
     onAnimalsChanged();
   };
@@ -374,22 +429,28 @@ function SuggestionReviewCard({
         {animalName}
       </div>
 
-      {suggestion.current_value && (
-        <div className="mb-2">
-          <div className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-1">Current</div>
-          <div className="text-sm text-stone-600 bg-stone-50 rounded-lg p-2.5 border border-stone-100 line-clamp-3">
-            {suggestion.current_value}
-          </div>
-        </div>
-      )}
+      {suggestion.suggestion_type === 'new_animal' && suggestion.proposed_value ? (
+        <NewAnimalPreview data={suggestion.proposed_value} />
+      ) : (
+        <>
+          {suggestion.current_value && (
+            <div className="mb-2">
+              <div className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-1">Current</div>
+              <div className="text-sm text-stone-600 bg-stone-50 rounded-lg p-2.5 border border-stone-100 line-clamp-3">
+                {suggestion.current_value}
+              </div>
+            </div>
+          )}
 
-      {suggestion.proposed_value && (
-        <div className="mb-2">
-          <div className="text-xs font-medium text-amber-600 uppercase tracking-wide mb-1">Proposed</div>
-          <div className="text-sm text-stone-700 bg-amber-50 rounded-lg p-2.5 border border-amber-100 line-clamp-3">
-            {suggestion.proposed_value}
-          </div>
-        </div>
+          {suggestion.proposed_value && (
+            <div className="mb-2">
+              <div className="text-xs font-medium text-amber-600 uppercase tracking-wide mb-1">Proposed</div>
+              <div className="text-sm text-stone-700 bg-amber-50 rounded-lg p-2.5 border border-amber-100 line-clamp-3">
+                {suggestion.proposed_value}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {suggestion.comment && (
@@ -413,7 +474,7 @@ function SuggestionReviewCard({
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 text-white font-medium text-sm hover:bg-emerald-600 transition-colors"
           >
             <CheckCircle2 className="w-4 h-4" />
-            Approve & Apply
+            {suggestion.suggestion_type === 'new_animal' ? 'Approve & Create Animal' : 'Approve & Apply'}
           </button>
           <button
             onClick={() => setShowReject(!showReject)}
@@ -705,6 +766,64 @@ function AnimalEditorModal({
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function NewAnimalPreview({ data }: { data: string }) {
+  let parsed: Record<string, string> | null = null;
+  try {
+    parsed = JSON.parse(data);
+  } catch {
+    return (
+      <div className="text-sm text-red-600 bg-red-50 rounded-lg p-3 border border-red-100">
+        Could not parse animal data.
+      </div>
+    );
+  }
+
+  if (!parsed) return null;
+
+  const fields: { key: string; label: string }[] = [
+    { key: 'name', label: 'Name' },
+    { key: 'scientific_name', label: 'Scientific Name' },
+    { key: 'category', label: 'Category' },
+    { key: 'era', label: 'Era' },
+    { key: 'period', label: 'Period' },
+    { key: 'diet', label: 'Diet' },
+    { key: 'length', label: 'Length' },
+    { key: 'weight', label: 'Weight' },
+    { key: 'habitat', label: 'Habitat' },
+    { key: 'discovery_year', label: 'Discovery Year' },
+    { key: 'discovered_by', label: 'Discovered By' },
+    { key: 'extinction_cause', label: 'Extinction Cause' },
+    { key: 'fun_facts', label: 'Fun Facts' },
+    { key: 'image_url', label: 'Image URL' },
+  ];
+
+  return (
+    <div className="space-y-2">
+      <div className="text-xs font-medium text-amber-600 uppercase tracking-wide">
+        Proposed New Animal
+      </div>
+      <div className="bg-amber-50 rounded-lg p-3 border border-amber-100 space-y-1.5">
+        {fields.map((f) => {
+          const val = parsed?.[f.key];
+          if (!val) return null;
+          return (
+            <div key={f.key} className="flex gap-2 text-sm">
+              <span className="font-medium text-stone-600 min-w-[120px] shrink-0">{f.label}:</span>
+              <span className="text-stone-800">{val}</span>
+            </div>
+          );
+        })}
+        {parsed?.description && (
+          <div className="pt-2 border-t border-amber-200">
+            <div className="font-medium text-stone-600 text-xs uppercase tracking-wide mb-1">Description</div>
+            <div className="text-sm text-stone-800">{parsed.description}</div>
+          </div>
+        )}
       </div>
     </div>
   );

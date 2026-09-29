@@ -7,6 +7,8 @@ import { BrowsePage } from '@/components/BrowsePage';
 import { AnimalDetailPage } from '@/components/AnimalDetailPage';
 import { EditorPanelPage } from '@/components/EditorPanelPage';
 import { SuggestionModal } from '@/components/SuggestionModal';
+import { NewAnimalSuggestionModal } from '@/components/NewAnimalSuggestionModal';
+import { EditorGate } from '@/components/EditorGate';
 import { Footer } from '@/components/Footer';
 
 type View =
@@ -20,7 +22,10 @@ export default function App() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
   const [suggestionTarget, setSuggestionTarget] = useState<Animal | null>(null);
+  const [showNewAnimalModal, setShowNewAnimalModal] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [editorUnlocked, setEditorUnlocked] = useState(false);
+  const [showEditorGate, setShowEditorGate] = useState(false);
 
   const fetchAnimals = useCallback(async () => {
     setLoading(true);
@@ -50,6 +55,10 @@ export default function App() {
   }, [fetchAnimals, fetchPendingCount]);
 
   const navigate = (v: View) => {
+    if (v.name === 'editor' && !editorUnlocked) {
+      setShowEditorGate(true);
+      return;
+    }
     setView(v);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -77,6 +86,7 @@ export default function App() {
             animals={animals}
             loading={loading}
             onNavigate={navigate}
+            onSuggestNew={() => setShowNewAnimalModal(true)}
           />
         )}
         {view.name === 'browse' && (
@@ -85,6 +95,7 @@ export default function App() {
             loading={loading}
             onNavigate={navigate}
             onSuggest={setSuggestionTarget}
+            onSuggestNew={() => setShowNewAnimalModal(true)}
           />
         )}
         {view.name === 'detail' && (
@@ -96,7 +107,7 @@ export default function App() {
             onAnimalUpdated={handleAnimalUpdated}
           />
         )}
-        {view.name === 'editor' && (
+        {view.name === 'editor' && editorUnlocked && (
           <EditorPanelPage
             animals={animals}
             onNavigate={navigate}
@@ -115,6 +126,28 @@ export default function App() {
             setSuggestionTarget(null);
             handleSuggestionSubmitted();
           }}
+        />
+      )}
+
+      {showNewAnimalModal && (
+        <NewAnimalSuggestionModal
+          onClose={() => setShowNewAnimalModal(false)}
+          onSubmitted={() => {
+            setShowNewAnimalModal(false);
+            handleSuggestionSubmitted();
+          }}
+        />
+      )}
+
+      {showEditorGate && (
+        <EditorGate
+          onUnlock={() => {
+            setEditorUnlocked(true);
+            setShowEditorGate(false);
+            setView({ name: 'editor' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onClose={() => setShowEditorGate(false)}
         />
       )}
     </div>
